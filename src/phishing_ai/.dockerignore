@@ -1,0 +1,16 @@
+# Datos y reportes de entrenamiento: no se usan en inferencia.
+data/
+reports/
+__pycache__/
+*.pyc
+# Modelos que no son el de produccion (el de produccion es
+# modelos_comparacion/hist_gradient_boosting.pkl; phishing_model_v2.pkl
+# se conserva para poder volver a Random Forest con MODEL_PATH).
+phishing_model.pkl
+phishing_model_lr.pkl
+phishing_model_lr_v2.pkl
+modelos_comparacion/knn.pkl
+modelos_comparacion/svm_rbf.pkl
+modelos_comparacion/mlp.pkl
+modelos_comparacion/logistic_regression.pkl
+modelos_comparacion/random_forest.pkl

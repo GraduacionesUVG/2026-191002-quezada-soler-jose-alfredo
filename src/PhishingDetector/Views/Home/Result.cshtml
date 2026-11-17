@@ -1,0 +1,303 @@
+@model PhishingDetector.Models.AnalysisResponse
+@using System.Globalization
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Resultado del Análisis";
+    var danger   = Model.IsPhishing;
+    var color    = danger ? "danger" : "success";
+    var hexColor = danger ? "#ff4757" : "#2ed573";
+    var label    = danger ? "PHISHING DETECTADO" : "URL LEGÍTIMA";
+    var subLabel = danger ? "Esta URL presenta características de phishing" : "No se detectaron patrones maliciosos";
+    var riskColor = Model.RiskLevel switch { "HIGH" => "danger", "MEDIUM" => "warning", _ => "success" };
+    var riskHex   = Model.RiskLevel switch { "HIGH" => "#ff4757", "MEDIUM" => "#ffa502",  _ => "#2ed573" };
+    var probNum  = (Model.Probability * 100).ToString("F1", CultureInfo.InvariantCulture);
+    var riskEs   = Model.RiskLevel switch { "HIGH" => "ALTO", "MEDIUM" => "MEDIO", _ => "BAJO" };
+
+    var featureLabels = new Dictionary<string, string> {
+        ["length_url"] = "Longitud de la URL", ["count_dots"] = "Puntos (.)",
+        ["has_https"] = "Usa HTTPS", ["has_at_symbol"] = "Contiene @",
+        ["has_ip_address"] = "Dominio es una IP", ["count_hyphens"] = "Guiones (-)",
+        ["suspicious_words_count"] = "Palabras sospechosas", ["count_subdomains"] = "Subdominios",
+        ["count_slashes"] = "Barras (/)", ["count_question_marks"] = "Signos ?",
+        ["count_equal_signs"] = "Signos =", ["count_underscores"] = "Guiones bajos (_)",
+        ["count_percent"] = "Caracteres %", ["length_domain"] = "Longitud del dominio",
+        ["count_digits_url"] = "Dígitos en la URL",
+    };
+    string FeatureLabel(string key) => featureLabels.TryGetValue(key, out var l) ? l : key.Replace("_", " ");
+
+    var featureMaxes = new Dictionary<string, double> {
+        ["length_url"] = 200, ["count_dots"] = 10, ["has_https"] = 1,
+        ["has_at_symbol"] = 1, ["has_ip_address"] = 1, ["count_hyphens"] = 10,
+        ["suspicious_words_count"] = 8, ["count_subdomains"] = 6,
+        ["count_slashes"] = 12, ["count_question_marks"] = 5,
+        ["count_equal_signs"] = 5, ["count_underscores"] = 5,
+        ["count_percent"] = 5, ["length_domain"] = 60, ["count_digits_url"] = 25,
+    };
+}
+
+<div class="row justify-content-center">
+<div class="col-xl-9">
+
+<!-- URL header -->
+<div class="url-bar mb-4">
+    <i class="fa fa-link text-secondary me-2"></i>
+    <span class="text-secondary small text-truncate d-inline-block" style="max-width:90%;" title="@Model.Url">
+        @Model.Url
+    </span>
+</div>
+
+<!-- Hero result card -->
+<div class="result-hero card bg-black border-@color border-2 shadow mb-4 @(danger ? "glow-danger" : "glow-success")">
+    <div class="card-body py-5 text-center">
+
+        <!-- Gauge -->
+        <div class="gauge-wrap mx-auto mb-2" style="position:relative; width:260px; height:145px;">
+            <canvas id="gaugeChart" width="260" height="145"></canvas>
+            <div class="gauge-label">
+                <div class="gauge-pct text-@color">@probNum%</div>
+                <div class="gauge-sub text-secondary">prob. de phishing</div>
+            </div>
+        </div>
+
+        <!-- Verdict -->
+        <h1 class="fw-bold text-@color mt-3 mb-1" style="letter-spacing:2px;">@label</h1>
+        <p class="text-secondary mb-4">@subLabel</p>
+
+        <!-- Risk badge -->
+        <span class="risk-badge risk-@(Model.RiskLevel.ToLower())">
+            <i class="fa fa-@(Model.RiskLevel == "HIGH" ? "radiation" : Model.RiskLevel == "MEDIUM" ? "triangle-exclamation" : "circle-check") me-2"></i>
+            RIESGO @riskEs
+        </span>
+    </div>
+</div>
+
+<!-- Feature chart + mini stats row -->
+<div class="row g-3 mb-4">
+
+    <!-- Feature bar chart -->
+    @if (Model.Features is { Count: > 0 })
+    {
+        <div class="col-lg-8">
+            <div class="card bg-black border-secondary h-100">
+                <div class="card-header border-secondary">
+                    <i class="fa fa-flask text-info me-2"></i>Características extraídas de la URL
+                </div>
+                <div class="card-body">
+                    <canvas id="featureChart" style="max-height:280px;"></canvas>
+                    <div class="text-secondary small mt-3">
+                        Cada barra es el valor respecto al máximo esperado.
+                        <span class="text-danger">Rojo</span> = señal típica de phishing,
+                        <span class="text-warning">amarillo</span> = intermedio,
+                        <span class="text-success">verde</span> = señal típica de sitio legítimo.
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Mini stats -->
+    <div class="col-lg-4">
+        <div class="card bg-black border-secondary h-100">
+            <div class="card-header border-secondary">
+                <i class="fa fa-circle-info text-secondary me-2"></i>Detalles del análisis
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 detail-list">
+                    <li>
+                        <span class="detail-key">Resultado</span>
+                        <span class="badge bg-@color">@(danger ? "PHISHING" : "LEGÍTIMA")</span>
+                    </li>
+                    <li>
+                        <span class="detail-key">Probabilidad</span>
+                        <strong class="text-@color">@probNum%</strong>
+                    </li>
+                    <li>
+                        <span class="detail-key">Nivel de riesgo</span>
+                        <span class="badge bg-@riskColor">@riskEs</span>
+                    </li>
+                    <li>
+                        <span class="detail-key">ID de análisis</span>
+                        <span class="text-secondary">#@Model.Id</span>
+                    </li>
+                    <li>
+                        <span class="detail-key">Fecha (UTC)</span>
+                        <span class="text-secondary small">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </li>
+                    @if (Model.Features is not null)
+                    {
+                        <li>
+                            <span class="detail-key">Características</span>
+                            <span class="text-secondary">@Model.Features.Count extraídas</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature raw table -->
+@if (Model.Features is { Count: > 0 })
+{
+    <div class="card bg-black border-secondary mb-4">
+        <div class="card-header border-secondary d-flex align-items-center">
+            <i class="fa fa-table text-secondary me-2"></i>
+            <span class="fw-semibold">Valores exactos de las características</span>
+            <button class="btn btn-sm btn-outline-secondary ms-auto"
+                    data-bs-toggle="collapse" data-bs-target="#featureTable">
+                <i class="fa fa-chevron-down"></i>
+            </button>
+        </div>
+        <div id="featureTable" class="collapse">
+            <table class="table table-dark table-sm table-hover mb-0">
+                <thead><tr><th class="ps-3 text-secondary fw-normal">Característica</th><th class="text-secondary fw-normal">Valor</th><th class="text-secondary fw-normal">Indicador</th></tr></thead>
+                <tbody>
+                    @foreach (var f in Model.Features)
+                    {
+                        var maxVal = featureMaxes.TryGetValue(f.Key, out var m) ? m : 1.0;
+                        var widthPct = Math.Min(100, f.Value / maxVal * 100);
+                        var fColor = (f.Key is "has_https") ? (f.Value > 0 ? "success" : "danger")
+                                   : (f.Key is "has_at_symbol" or "has_ip_address") ? (f.Value > 0 ? "danger" : "success")
+                                   : "info";
+                        <tr>
+                            <td class="ps-3 text-secondary">@FeatureLabel(f.Key)</td>
+                            <td class="fw-bold">@f.Value</td>
+                            <td style="width:160px;">
+                                <div class="progress" style="height:5px;">
+                                    <div class="progress-bar bg-@fColor"
+                                         style="width:@widthPct.ToString("F0", CultureInfo.InvariantCulture)%">
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<!-- Cómo se interpreta -->
+<div class="card bg-black border-secondary mb-4">
+    <div class="card-body small text-secondary">
+        <i class="fa fa-circle-info text-info me-2"></i>
+        <strong class="text-light">Cómo se interpreta:</strong>
+        el veredicto lo da un modelo HistGradientBoosting (gradient boosting) que analiza únicamente el texto de la URL
+        (no visita el sitio ni consulta listas de reputación). El nivel de riesgo se deriva de la
+        probabilidad: <strong>ALTO</strong> desde 70%, <strong>MEDIO</strong> entre 31% y 70%,
+        <strong>BAJO</strong> por debajo de 31% (umbral a partir del cual la URL se clasifica como phishing). Un resultado "legítima" no garantiza que el sitio sea seguro.
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="d-flex flex-wrap gap-3">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light px-4">
+        <i class="fa fa-magnifying-glass me-2"></i>Analizar otra URL
+    </a>
+    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary px-4">
+        <i class="fa fa-chart-column me-2"></i>Ver Dashboard
+    </a>
+</div>
+
+</div><!-- /col -->
+</div><!-- /row -->
+
+@section Scripts {
+<script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+<script>
+Chart.defaults.color = '#9aa5b4';
+Chart.defaults.borderColor = '#1e2530';
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+const prob     = @Html.Raw(probNum);
+const hexColor = '@Html.Raw(hexColor)';
+
+// HALF-DOUGHNUT GAUGE
+new Chart(document.getElementById('gaugeChart'), {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [prob, 100 - prob, 100],
+            backgroundColor: [hexColor, '#1a1f2b', 'transparent'],
+            borderWidth: 0,
+            borderRadius: [6, 0, 0],
+        }]
+    },
+    options: {
+        circumference: 180,
+        rotation: -90,
+        cutout: '76%',
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        animation: { duration: 1600, easing: 'easeInOutQuart' }
+    }
+});
+
+// FEATURE HORIZONTAL BAR CHART
+@if (Model.Features is { Count: > 0 })
+{
+    var labelsJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Features.Keys.Select(FeatureLabel).ToList());
+    var rawJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Features.Values.ToList());
+    var normJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Features.Select(f => {
+            var mx = featureMaxes.TryGetValue(f.Key, out var mv) ? mv : 1.0;
+            return Math.Round(Math.Min(100, f.Value / mx * 100), 1);
+        }).ToList());
+
+    // Color por significado: HTTPS presente es señal legítima (a diferencia del resto,
+    // donde un valor alto se parece más a phishing).
+    const string red = "rgba(255,71,87,0.75)", yellow = "rgba(255,165,2,0.75)", green = "rgba(46,213,115,0.75)";
+    var colorsJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Features.Select(f => {
+            if (f.Key == "has_https") return f.Value > 0 ? green : red;
+            var mx = featureMaxes.TryGetValue(f.Key, out var mv) ? mv : 1.0;
+            var norm = Math.Min(100, f.Value / mx * 100);
+            return norm >= 70 ? red : norm >= 35 ? yellow : green;
+        }).ToList());
+
+    <text>
+const featLabels = @Html.Raw(labelsJson);
+const featNorm   = @Html.Raw(normJson);
+const featRaw    = @Html.Raw(rawJson);
+const featColors = @Html.Raw(colorsJson);
+
+new Chart(document.getElementById('featureChart'), {
+    type: 'bar',
+    data: {
+        labels: featLabels,
+        datasets: [{
+            label: 'Valor normalizado (%)',
+            data: featNorm,
+            backgroundColor: featColors,
+            borderRadius: 5,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (ctx) => ` Valor: ${featRaw[ctx.dataIndex]}  (${ctx.raw.toFixed(1)}% del máximo esperado)`
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { color: '#1e2530' },
+                max: 100,
+                ticks: { callback: v => v + '%' }
+            },
+            y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        },
+        animation: { duration: 1200, easing: 'easeOutCubic' }
+    }
+});
+    </text>
+}
+</script>
+}

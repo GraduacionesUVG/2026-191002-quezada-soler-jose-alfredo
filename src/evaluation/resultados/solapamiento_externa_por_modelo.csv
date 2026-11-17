@@ -1,0 +1,7 @@
+clave,umbral,fp_legitimo_host_compartido,n_legitimo_host_compartido,fpr_host_compartido,fp_legitimo_host_nuevo,n_legitimo_host_nuevo,fpr_host_nuevo,recall_phishing
+random_forest,0.4,12,259,0.0463,5,22,0.2273,0.8221
+logistic_regression,0.38,18,259,0.0695,6,22,0.2727,0.7936
+hist_gradient_boosting,0.31,14,259,0.0541,0,22,0.0,0.8541
+svm_rbf,0.29,14,259,0.0541,4,22,0.1818,0.8363
+knn,0.41,4,259,0.0154,0,22,0.0,0.669
+mlp,0.46,8,259,0.0309,0,22,0.0,0.7331

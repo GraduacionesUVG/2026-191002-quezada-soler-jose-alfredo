@@ -1,0 +1,7 @@
+clave,modelo,n,promedio_ms,mediana_ms,p95_ms,maximo_ms
+random_forest,Random Forest,500,50.274,50.749,60.593,134.268
+logistic_regression,Logistic Regression,500,0.662,0.636,0.834,1.27
+hist_gradient_boosting,HistGradientBoosting,500,20.136,19.679,23.141,85.201
+svm_rbf,SVM (RBF),500,2.973,2.824,3.75,6.286
+knn,KNN (k=15),500,2.445,2.359,3.348,4.977
+mlp,"MLP (64, 32)",500,0.663,0.634,0.851,2.151

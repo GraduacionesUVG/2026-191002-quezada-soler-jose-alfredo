@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reporte de entrenamiento - PhishingShield</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f9f9f7;
+    --surface-1: #fcfcfb;
+    --surface-2: #ffffff;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --gridline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0: #0d0d0d;
+      --surface-1: #1a1a19;
+      --surface-2: #232322;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --gridline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  header p { margin: 0; color: var(--text-secondary); font-size: .9rem; }
+  .tag {
+    display: inline-block; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 12px; font-size: .78rem; color: var(--text-secondary);
+    margin: 4px 6px 0 0;
+  }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; margin: 20px 0 32px;
+  }
+  .kpi-card {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .kpi-value { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
+  .kpi-label { color: var(--text-secondary); font-size: .75rem; text-transform: uppercase;
+                letter-spacing: .05em; margin-top: 4px; }
+  .section { margin: 32px 0; }
+  .section h2 { font-size: 1.1rem; margin: 0 0 4px; }
+  .section .hint { color: var(--text-muted); font-size: .82rem; margin: 0 0 16px; }
+  .card {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+  .legend { display: flex; gap: 18px; font-size: .82rem; color: var(--text-secondary);
+             margin-bottom: 18px; flex-wrap: wrap; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block;
+                     margin-right: 6px; vertical-align: middle; }
+  .metric-row { margin-bottom: 16px; }
+  .metric-name { font-size: .85rem; color: var(--text-secondary); margin-bottom: 6px; }
+  .bar-group { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .bar-track { flex: 1; background: var(--gridline); border-radius: 5px; height: 10px;
+                overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 5px; transition: width .4s ease; }
+  .bar-value { font-size: .78rem; color: var(--text-secondary); min-width: 44px; text-align: right; }
+  .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .donut-total { font-size: 22px; font-weight: 700; fill: var(--text-primary); }
+  .donut-sub { font-size: 10px; fill: var(--text-muted); text-transform: uppercase; }
+  .donut-legend { font-size: .82rem; color: var(--text-secondary); }
+  .donut-legend div { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .fi-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .fi-label { font-size: .82rem; color: var(--text-secondary); min-width: 160px; }
+  .fi-track { flex: 1; background: var(--gridline); border-radius: 4px; height: 9px; overflow: hidden; }
+  .fi-fill { height: 100%; border-radius: 4px; background: #2a78d6; }
+  .fi-value { font-size: .78rem; color: var(--text-muted); min-width: 42px; text-align: right; }
+  .cm-grid { display: flex; gap: 24px; flex-wrap: wrap; }
+  .cm-block { flex: 1; min-width: 220px; }
+  .cm-title { font-size: .88rem; margin: 0 0 10px; color: var(--text-secondary); }
+  table.cm { border-collapse: separate; border-spacing: 3px; font-size: .82rem; }
+  table.cm th { font-weight: 500; color: var(--text-muted); font-size: .72rem;
+                 text-transform: uppercase; letter-spacing: .04em; padding: 4px 8px; }
+  table.cm td { border-radius: 8px; padding: 14px 18px; text-align: center; font-weight: 700; }
+  .cm-axis { text-align: center; }
+  .lc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .lc-grid { grid-template-columns: 1fr; } }
+  .lc-card { padding: 18px 18px 14px; }
+  .axis-t { font-size: 10px; fill: var(--text-muted); }
+  .lc-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .76rem;
+                color: var(--text-secondary); margin-top: 8px; }
+  .lc-line { display: inline-block; width: 18px; height: 3px; border-radius: 2px;
+              margin-right: 6px; vertical-align: middle; }
+  .lc-dash { background: repeating-linear-gradient(90deg, currentColor 0 6px, transparent 6px 10px); }
+  table.lc-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  table.lc-table th { text-align: left; font-weight: 500; color: var(--text-muted); font-size: .72rem;
+                       text-transform: uppercase; letter-spacing: .04em; padding: 6px 10px;
+                       border-bottom: 1px solid var(--gridline); }
+  table.lc-table td { padding: 8px 10px; border-bottom: 1px solid var(--gridline);
+                       color: var(--text-secondary); }
+  .muted { color: var(--text-muted); font-size: .78rem; }
+  footer { margin-top: 40px; color: var(--text-muted); font-size: .78rem; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Reporte de entrenamiento - PhishingShield</h1>
+    <p>Generado el 2026-09-28 22:03 UTC &middot; dataset: data/dataset_entrenamiento.csv</p>
+    <div><span class="tag">Tranco+crawl: <strong>16834</strong></span><span class="tag">URLhaus: <strong>16601</strong></span><span class="tag">OpenPhish: <strong>300</strong></span><span class="tag">Tranco: <strong>238</strong></span><span class="tag">Manual/urlscan.io: <strong>42</strong></span><span class="tag">Manual/oficial: <strong>16</strong></span></div>
+  </header>
+
+  <div class="kpi-grid">
+    
+    <div class="kpi-card">
+      <div class="kpi-value">34031</div>
+      <div class="kpi-label">URLs totales</div>
+    </div>
+    
+    <div class="kpi-card">
+      <div class="kpi-value">16943</div>
+      <div class="kpi-label">Phishing</div>
+    </div>
+    
+    <div class="kpi-card">
+      <div class="kpi-value">17088</div>
+      <div class="kpi-label">Legitimas</div>
+    </div>
+    
+    <div class="kpi-card">
+      <div class="kpi-value">49.8%</div>
+      <div class="kpi-label">% Phishing</div>
+    </div>
+    
+    <div class="kpi-card">
+      <div class="kpi-value">27224 / 6807</div>
+      <div class="kpi-label">Train / Test</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Comparacion de metricas</h2>
+    <p class="hint">Random Forest vs Logistic Regression sobre el conjunto de prueba (6807 URLs, 20.0% del total).</p>
+    <div class="card">
+      <div class="legend">
+        <span><span class="legend-swatch" style="background:#2a78d6;"></span>Random Forest</span>
+        <span><span class="legend-swatch" style="background:#eb6834;"></span>Logistic Regression</span>
+      </div>
+      
+        <div class="metric-row">
+          <div class="metric-name">Accuracy</div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:98.3%; background:#2a78d6;"
+                   title="Random Forest - Accuracy: 98.3%"></div>
+            </div>
+            <span class="bar-value">98.3%</span>
+          </div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:96.4%; background:#eb6834;"
+                   title="Logistic Regression - Accuracy: 96.4%"></div>
+            </div>
+            <span class="bar-value">96.4%</span>
+          </div>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-name">Precision</div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:99.4%; background:#2a78d6;"
+                   title="Random Forest - Precision: 99.4%"></div>
+            </div>
+            <span class="bar-value">99.4%</span>
+          </div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:98.0%; background:#eb6834;"
+                   title="Logistic Regression - Precision: 98.0%"></div>
+            </div>
+            <span class="bar-value">98.0%</span>
+          </div>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-name">Recall</div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:97.1%; background:#2a78d6;"
+                   title="Random Forest - Recall: 97.1%"></div>
+            </div>
+            <span class="bar-value">97.1%</span>
+          </div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:94.8%; background:#eb6834;"
+                   title="Logistic Regression - Recall: 94.8%"></div>
+            </div>
+            <span class="bar-value">94.8%</span>
+          </div>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-name">F1-score</div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:98.2%; background:#2a78d6;"
+                   title="Random Forest - F1-score: 98.2%"></div>
+            </div>
+            <span class="bar-value">98.2%</span>
+          </div>
+          <div class="bar-group">
+            <div class="bar-track">
+              <div class="bar-fill" style="width:96.4%; background:#eb6834;"
+                   title="Logistic Regression - F1-score: 96.4%"></div>
+            </div>
+            <span class="bar-value">96.4%</span>
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Dataset y caracteristicas</h2>
+    <p class="hint">Distribucion de clases usada para el entrenamiento e importancia de variables (Random Forest).</p>
+    <div class="grid-2">
+      <div class="card">
+        <h4 class="cm-title">Importancia de caracteristicas (Top 10, RF)</h4>
+        
+        <div class="fi-row">
+          <span class="fi-label">has_https</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:100.0%;"
+                 title="has_https: 0.2677"></div>
+          </div>
+          <span class="fi-value">0.268</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">count_digits_url</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:97.9%;"
+                 title="count_digits_url: 0.2621"></div>
+          </div>
+          <span class="fi-value">0.262</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">has_ip_address</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:45.6%;"
+                 title="has_ip_address: 0.1221"></div>
+          </div>
+          <span class="fi-value">0.122</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">count_subdomains</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:37.7%;"
+                 title="count_subdomains: 0.1008"></div>
+          </div>
+          <span class="fi-value">0.101</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">count_dots</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:35.7%;"
+                 title="count_dots: 0.0956"></div>
+          </div>
+          <span class="fi-value">0.096</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">length_domain</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:18.6%;"
+                 title="length_domain: 0.0498"></div>
+          </div>
+          <span class="fi-value">0.050</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">length_url</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:17.8%;"
+                 title="length_url: 0.0476"></div>
+          </div>
+          <span class="fi-value">0.048</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">count_hyphens</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:6.2%;"
+                 title="count_hyphens: 0.0165"></div>
+          </div>
+          <span class="fi-value">0.017</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">count_slashes</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:3.9%;"
+                 title="count_slashes: 0.0105"></div>
+          </div>
+          <span class="fi-value">0.010</span>
+        </div>
+
+        <div class="fi-row">
+          <span class="fi-label">count_underscores</span>
+          <div class="fi-track">
+            <div class="fi-fill" style="width:3.8%;"
+                 title="count_underscores: 0.0102"></div>
+          </div>
+          <span class="fi-value">0.010</span>
+        </div>
+      </div>
+      <div class="card donut-wrap">
+        
+    <svg width="150" height="150" viewBox="0 0 150 150" role="img"
+         aria-label="Distribucion de clases: 16943 phishing, 17088 legitimas">
+      <circle cx="75" cy="75" r="52" fill="none" stroke="var(--gridline)" stroke-width="18"/>
+      <circle cx="75" cy="75" r="52" fill="none" stroke="#0ca30c" stroke-width="18"
+              stroke-dasharray="326.73" stroke-dashoffset="0"
+              transform="rotate(-90 75 75)">
+        <title>Legitimas: 17088 (50.2%)</title>
+      </circle>
+      <circle cx="75" cy="75" r="52" fill="none" stroke="#d03b3b" stroke-width="18"
+              stroke-dasharray="162.67 326.73"
+              stroke-dashoffset="0" transform="rotate(-90 75 75)"
+              style="transform-origin:75px 75px;">
+        <title>Phishing: 16943 (49.8%)</title>
+      </circle>
+      <text x="75" y="70" text-anchor="middle" class="donut-total">34031</text>
+      <text x="75" y="88" text-anchor="middle" class="donut-sub">URLs</text>
+    </svg>
+        <div class="donut-legend">
+          <div><span class="legend-swatch" style="background:#d03b3b;"></span>Phishing &middot; 16943 (49.8%)</div>
+          <div><span class="legend-swatch" style="background:#0ca30c;"></span>Legitimas &middot; 17088 (50.2%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Matrices de confusion</h2>
+    <p class="hint">Sobre el conjunto de prueba (6807 URLs no vistas durante el entrenamiento).</p>
+    <div class="card">
+      <div class="cm-grid">
+        
+    <div class="cm-block">
+      <h4 class="cm-title">Random Forest</h4>
+      <table class="cm">
+        <tr>
+          <th></th>
+          <th colspan="2" class="cm-axis">Prediccion</th>
+        </tr>
+        <tr>
+          <th class="cm-axis-v" rowspan="2">Real</th>
+          <th>Legitimo</th><th>Phishing</th>
+        </tr>
+        <tr>
+          <th class="cm-row-label">Legitimo</th>
+          <td style="background:#0d366b; color:#ffffff;">3398</td>
+          <td style="background:#cde2fb; color:#0b0b0b;">20</td>
+        </tr>
+        <tr>
+          <th class="cm-row-label">Phishing</th>
+          <td style="background:#cde2fb; color:#0b0b0b;">98</td>
+          <td style="background:#0d366b; color:#ffffff;">3291</td>
+        </tr>
+      </table>
+    </div>
+        
+    <div class="cm-block">
+      <h4 class="cm-title">Logistic Regression</h4>
+      <table class="cm">
+        <tr>
+          <th></th>
+          <th colspan="2" class="cm-axis">Prediccion</th>
+        </tr>
+        <tr>
+          <th class="cm-axis-v" rowspan="2">Real</th>
+          <th>Legitimo</th><th>Phishing</th>
+        </tr>
+        <tr>
+          <th class="cm-row-label">Legitimo</th>
+          <td style="background:#0d366b; color:#ffffff;">3351</td>
+          <td style="background:#cde2fb; color:#0b0b0b;">67</td>
+        </tr>
+        <tr>
+          <th class="cm-row-label">Phishing</th>
+          <td style="background:#cde2fb; color:#0b0b0b;">175</td>
+          <td style="background:#0d366b; color:#ffffff;">3214</td>
+        </tr>
+      </table>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="section">
+    <h2>Curvas de aprendizaje (control de sobreajuste)</h2>
+    <p class="hint">F1 medio con 5-fold CV al entrenar con una fraccion creciente de los datos.
+      Si la curva de validacion se acerca a la de entrenamiento el modelo generaliza; una brecha grande y
+      persistente indica sobreajuste. Ademas del K-fold aleatorio se valida <strong>agrupando por dominio</strong>:
+      muchas URLs comparten dominio, y un split aleatorio deja URLs hermanas a ambos lados, lo que puede
+      sobreestimar el desempeno sobre sitios nuevos.</p>
+    <div class="lc-grid">
+      <div class="card lc-card">
+        <h4 class="cm-title">Random Forest</h4>
+        
+    <svg viewBox="0 0 460 270" width="100%" role="img"
+         aria-label="Curva de aprendizaje: F1 de entrenamiento y validacion segun el tamano del entrenamiento">
+      <line x1="52" y1="226.0" x2="444" y2="226.0" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="230.0" text-anchor="end" class="axis-t">94%</text><line x1="52" y1="155.3" x2="444" y2="155.3" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="159.3" text-anchor="end" class="axis-t">96%</text><line x1="52" y1="84.7" x2="444" y2="84.7" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="88.7" text-anchor="end" class="axis-t">98%</text><line x1="52" y1="14.0" x2="444" y2="14.0" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="18.0" text-anchor="end" class="axis-t">100%</text><text x="91.2" y="242" text-anchor="middle" class="axis-t">2.722</text><text x="161.7" y="242" text-anchor="middle" class="axis-t">7.622</text><text x="232.3" y="242" text-anchor="middle" class="axis-t">12.523</text><text x="302.9" y="242" text-anchor="middle" class="axis-t">17.423</text><text x="373.4" y="242" text-anchor="middle" class="axis-t">22.323</text><text x="444.0" y="242" text-anchor="middle" class="axis-t">27.224</text><text x="248.0" y="264" text-anchor="middle" class="axis-t">URLs usadas para entrenar</text><polyline points="91.2,90.3 161.7,76.2 232.3,69.2 302.9,66.9 373.4,65.4 444.0,64.2" fill="none" stroke="var(--text-muted)" stroke-width="2.2" stroke-linejoin="round"/><circle cx="91.2" cy="90.3" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 2722 URLs: F1 97.84%</title></circle><circle cx="161.7" cy="76.2" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 7622 URLs: F1 98.24%</title></circle><circle cx="232.3" cy="69.2" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 12523 URLs: F1 98.44%</title></circle><circle cx="302.9" cy="66.9" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 17423 URLs: F1 98.50%</title></circle><circle cx="373.4" cy="65.4" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 22323 URLs: F1 98.55%</title></circle><circle cx="444.0" cy="64.2" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 27224 URLs: F1 98.58%</title></circle><polyline points="91.2,132.0 161.7,118.0 232.3,118.6 302.9,114.2 373.4,116.7 444.0,112.7" fill="none" stroke="#2a78d6" stroke-width="2.2" stroke-dasharray="6 4" stroke-linejoin="round"/><circle cx="91.2" cy="132.0" r="3.4" fill="#2a78d6"><title>Validacion (por dominio) - 2722 URLs: F1 96.66%</title></circle><circle cx="161.7" cy="118.0" r="3.4" fill="#2a78d6"><title>Validacion (por dominio) - 7622 URLs: F1 97.06%</title></circle><circle cx="232.3" cy="118.6" r="3.4" fill="#2a78d6"><title>Validacion (por dominio) - 12523 URLs: F1 97.04%</title></circle><circle cx="302.9" cy="114.2" r="3.4" fill="#2a78d6"><title>Validacion (por dominio) - 17423 URLs: F1 97.17%</title></circle><circle cx="373.4" cy="116.7" r="3.4" fill="#2a78d6"><title>Validacion (por dominio) - 22323 URLs: F1 97.09%</title></circle><circle cx="444.0" cy="112.7" r="3.4" fill="#2a78d6"><title>Validacion (por dominio) - 27224 URLs: F1 97.21%</title></circle><polyline points="91.2,117.3 161.7,98.2 232.3,86.2 302.9,80.3 373.4,76.5 444.0,74.7" fill="none" stroke="#2a78d6" stroke-width="2.2" stroke-linejoin="round"/><circle cx="91.2" cy="117.3" r="3.4" fill="#2a78d6"><title>Validacion (aleatoria) - 2722 URLs: F1 97.08%</title></circle><circle cx="161.7" cy="98.2" r="3.4" fill="#2a78d6"><title>Validacion (aleatoria) - 7622 URLs: F1 97.62%</title></circle><circle cx="232.3" cy="86.2" r="3.4" fill="#2a78d6"><title>Validacion (aleatoria) - 12523 URLs: F1 97.96%</title></circle><circle cx="302.9" cy="80.3" r="3.4" fill="#2a78d6"><title>Validacion (aleatoria) - 17423 URLs: F1 98.12%</title></circle><circle cx="373.4" cy="76.5" r="3.4" fill="#2a78d6"><title>Validacion (aleatoria) - 22323 URLs: F1 98.23%</title></circle><circle cx="444.0" cy="74.7" r="3.4" fill="#2a78d6"><title>Validacion (aleatoria) - 27224 URLs: F1 98.28%</title></circle>
+    </svg>
+        <div class="lc-legend">
+          <span><span class="lc-line" style="background:var(--text-muted);"></span>Entrenamiento</span>
+          <span><span class="lc-line" style="background:#2a78d6;"></span>Validacion (K-fold aleatorio)</span>
+          <span><span class="lc-line lc-dash" style="color:#2a78d6;"></span>Validacion (por dominio)</span>
+        </div>
+      </div>
+      <div class="card lc-card">
+        <h4 class="cm-title">Logistic Regression</h4>
+        
+    <svg viewBox="0 0 460 270" width="100%" role="img"
+         aria-label="Curva de aprendizaje: F1 de entrenamiento y validacion segun el tamano del entrenamiento">
+      <line x1="52" y1="226.0" x2="444" y2="226.0" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="230.0" text-anchor="end" class="axis-t">94%</text><line x1="52" y1="155.3" x2="444" y2="155.3" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="159.3" text-anchor="end" class="axis-t">96%</text><line x1="52" y1="84.7" x2="444" y2="84.7" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="88.7" text-anchor="end" class="axis-t">98%</text><line x1="52" y1="14.0" x2="444" y2="14.0" stroke="var(--gridline)" stroke-width="1"/><text x="44" y="18.0" text-anchor="end" class="axis-t">100%</text><text x="91.2" y="242" text-anchor="middle" class="axis-t">2.722</text><text x="161.7" y="242" text-anchor="middle" class="axis-t">7.622</text><text x="232.3" y="242" text-anchor="middle" class="axis-t">12.523</text><text x="302.9" y="242" text-anchor="middle" class="axis-t">17.423</text><text x="373.4" y="242" text-anchor="middle" class="axis-t">22.323</text><text x="444.0" y="242" text-anchor="middle" class="axis-t">27.224</text><text x="248.0" y="264" text-anchor="middle" class="axis-t">URLs usadas para entrenar</text><polyline points="91.2,130.1 161.7,128.2 232.3,129.8 302.9,130.3 373.4,131.2 444.0,132.4" fill="none" stroke="var(--text-muted)" stroke-width="2.2" stroke-linejoin="round"/><circle cx="91.2" cy="130.1" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 2722 URLs: F1 96.71%</title></circle><circle cx="161.7" cy="128.2" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 7622 URLs: F1 96.77%</title></circle><circle cx="232.3" cy="129.8" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 12523 URLs: F1 96.72%</title></circle><circle cx="302.9" cy="130.3" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 17423 URLs: F1 96.71%</title></circle><circle cx="373.4" cy="131.2" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 22323 URLs: F1 96.68%</title></circle><circle cx="444.0" cy="132.4" r="3.4" fill="var(--text-muted)"><title>Entrenamiento - 27224 URLs: F1 96.65%</title></circle><polyline points="91.2,138.6 161.7,140.3 232.3,138.7 302.9,137.8 373.4,135.6 444.0,137.5" fill="none" stroke="#eb6834" stroke-width="2.2" stroke-dasharray="6 4" stroke-linejoin="round"/><circle cx="91.2" cy="138.6" r="3.4" fill="#eb6834"><title>Validacion (por dominio) - 2722 URLs: F1 96.47%</title></circle><circle cx="161.7" cy="140.3" r="3.4" fill="#eb6834"><title>Validacion (por dominio) - 7622 URLs: F1 96.42%</title></circle><circle cx="232.3" cy="138.7" r="3.4" fill="#eb6834"><title>Validacion (por dominio) - 12523 URLs: F1 96.47%</title></circle><circle cx="302.9" cy="137.8" r="3.4" fill="#eb6834"><title>Validacion (por dominio) - 17423 URLs: F1 96.50%</title></circle><circle cx="373.4" cy="135.6" r="3.4" fill="#eb6834"><title>Validacion (por dominio) - 22323 URLs: F1 96.56%</title></circle><circle cx="444.0" cy="137.5" r="3.4" fill="#eb6834"><title>Validacion (por dominio) - 27224 URLs: F1 96.51%</title></circle><polyline points="91.2,135.7 161.7,133.7 232.3,134.9 302.9,133.8 373.4,133.8 444.0,132.3" fill="none" stroke="#eb6834" stroke-width="2.2" stroke-linejoin="round"/><circle cx="91.2" cy="135.7" r="3.4" fill="#eb6834"><title>Validacion (aleatoria) - 2722 URLs: F1 96.56%</title></circle><circle cx="161.7" cy="133.7" r="3.4" fill="#eb6834"><title>Validacion (aleatoria) - 7622 URLs: F1 96.61%</title></circle><circle cx="232.3" cy="134.9" r="3.4" fill="#eb6834"><title>Validacion (aleatoria) - 12523 URLs: F1 96.58%</title></circle><circle cx="302.9" cy="133.8" r="3.4" fill="#eb6834"><title>Validacion (aleatoria) - 17423 URLs: F1 96.61%</title></circle><circle cx="373.4" cy="133.8" r="3.4" fill="#eb6834"><title>Validacion (aleatoria) - 22323 URLs: F1 96.61%</title></circle><circle cx="444.0" cy="132.3" r="3.4" fill="#eb6834"><title>Validacion (aleatoria) - 27224 URLs: F1 96.65%</title></circle>
+    </svg>
+        <div class="lc-legend">
+          <span><span class="lc-line" style="background:var(--text-muted);"></span>Entrenamiento</span>
+          <span><span class="lc-line" style="background:#eb6834;"></span>Validacion (K-fold aleatorio)</span>
+          <span><span class="lc-line lc-dash" style="color:#eb6834;"></span>Validacion (por dominio)</span>
+        </div>
+      </div></div>
+    <div class="card" style="margin-top:20px;">
+      <h4 class="cm-title">Resumen con el 100% de los datos de entrenamiento (F1)</h4>
+      <table class="lc-table">
+        <thead><tr><th>Modelo</th><th>Validacion</th><th>F1 entrenamiento</th>
+          <th>F1 validacion</th><th>Brecha</th></tr></thead>
+        <tbody><tr><td>Random Forest</td><td>K-fold aleatorio</td><td>98.6%</td><td>98.3% <span class="muted">&plusmn;0.1</span></td><td>0.3 pts</td></tr><tr><td>Random Forest</td><td>Agrupado por dominio</td><td>98.6%</td><td>97.2% <span class="muted">&plusmn;1.2</span></td><td>1.4 pts</td></tr><tr><td>Logistic Regression</td><td>K-fold aleatorio</td><td>96.6%</td><td>96.7% <span class="muted">&plusmn;0.0</span></td><td>-0.0 pts</td></tr><tr><td>Logistic Regression</td><td>Agrupado por dominio</td><td>96.7%</td><td>96.5% <span class="muted">&plusmn;1.1</span></td><td>0.2 pts</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Generado automaticamente por model_trainer.py &middot; no requiere conexion a internet.</footer>
+</div>
+</body>
+</html>

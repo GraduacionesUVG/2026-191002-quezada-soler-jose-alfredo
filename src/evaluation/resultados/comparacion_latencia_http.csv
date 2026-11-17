@@ -1,0 +1,7 @@
+clave,umbral,n_solicitudes,exitosas,fallidas,promedio_ms,mediana_ms,p95_ms,maximo_ms
+random_forest,0.4,100,100,0,53.0,50.6,60.58,129.99
+logistic_regression,0.38,100,100,0,4.87,4.13,4.81,71.16
+hist_gradient_boosting,0.31,100,100,0,28.43,7.63,9.19,2070.73
+svm_rbf,0.29,100,100,0,7.35,6.53,7.23,82.22
+knn,0.41,100,100,0,6.77,5.9,6.87,83.97
+mlp,0.46,100,100,0,4.85,4.07,4.87,79.25

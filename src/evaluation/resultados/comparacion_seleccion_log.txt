@@ -1,0 +1,26 @@
+Midiendo latencia HTTP: random_forest (umbral 0.4) ...
+  mediana=50.6 ms  p95=60.58 ms  max=129.99 ms  fallidas=0
+Midiendo latencia HTTP: logistic_regression (umbral 0.38) ...
+  mediana=4.13 ms  p95=4.81 ms  max=71.16 ms  fallidas=0
+Midiendo latencia HTTP: hist_gradient_boosting (umbral 0.31) ...
+  mediana=7.63 ms  p95=9.19 ms  max=2070.73 ms  fallidas=0
+Midiendo latencia HTTP: svm_rbf (umbral 0.29) ...
+  mediana=6.53 ms  p95=7.23 ms  max=82.22 ms  fallidas=0
+Midiendo latencia HTTP: knn (umbral 0.41) ...
+  mediana=5.9 ms  p95=6.87 ms  max=83.97 ms  fallidas=0
+Midiendo latencia HTTP: mlp (umbral 0.46) ...
+  mediana=4.07 ms  p95=4.87 ms  max=79.25 ms  fallidas=0
+
+=== Seleccion (criterio fijado en criterio_seleccion.json) ===
+  modelo                    F1 ext  F1 host  p95 ms
+  hist_gradient_boosting    0.8972   0.9347     9.2
+  svm_rbf                   0.8801   0.9235     7.2
+  random_forest             0.8733   0.9349    60.6
+  logistic_regression       0.8447   0.9115     4.8
+  mlp                       0.8323   0.9327     4.9
+  knn                       0.7949   0.8683     6.9
+
+  GANADOR: hist_gradient_boosting  (mayor F1 en validacion externa entre los elegibles)
+  Produccion: {'MODEL_PATH': 'modelos_comparacion/hist_gradient_boosting.pkl', 'DECISION_THRESHOLD': 0.31}
+
+>> Guardado en C:\Users\jquez\Desktop\Protocolo\ptf\Phishing Detector\evaluation\resultados\comparacion_seleccion.json

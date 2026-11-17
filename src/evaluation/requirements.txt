@@ -1,0 +1,4 @@
+# Dependencias adicionales a las de phishing_ai/requirements.txt
+# (scikit-learn, numpy, joblib, requests -- ya deben estar instaladas
+# en el mismo entorno donde corre phishing_ai).
+matplotlib>=3.8.0

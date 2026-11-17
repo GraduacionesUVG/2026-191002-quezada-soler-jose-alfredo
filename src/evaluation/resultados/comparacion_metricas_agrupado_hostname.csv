@@ -1,0 +1,7 @@
+clave,modelo,accuracy_media,accuracy_std,precision_media,precision_std,recall_media,recall_std,f1_media,f1_std,roc_auc_media,roc_auc_std,fit_time_medio_s
+random_forest,Random Forest,0.937,0.0061,0.9668,0.0081,0.905,0.0094,0.9349,0.0064,0.979,0.002,1.23
+logistic_regression,Logistic Regression,0.9151,0.0049,0.9521,0.0092,0.8743,0.0095,0.9115,0.0052,0.9602,0.003,0.11
+hist_gradient_boosting,HistGradientBoosting,0.9365,0.0074,0.9623,0.0079,0.9087,0.0128,0.9347,0.0079,0.9802,0.0022,1.81
+svm_rbf,SVM (RBF),0.926,0.0051,0.9551,0.0096,0.8941,0.0094,0.9235,0.0052,0.972,0.0025,63.15
+knn,KNN (k=15),0.8608,0.0049,0.8239,0.0046,0.9179,0.0087,0.8683,0.0049,0.9148,0.0033,0.16
+mlp,"MLP (64, 32)",0.9345,0.0045,0.9592,0.01,0.9079,0.0141,0.9327,0.005,0.977,0.002,10.66

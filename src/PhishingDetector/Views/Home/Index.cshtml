@@ -1,0 +1,81 @@
+@model PhishingDetector.Models.AnalyzeRequest
+@{
+    ViewData["Title"] = "Analizar URL";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <div class="text-center mb-5">
+            <div class="mb-3">
+                <i class="fa fa-shield-halved text-danger" style="font-size:3.5rem;"></i>
+            </div>
+            <h1 class="fw-bold">PhishingShield</h1>
+            <p class="text-secondary lead">
+                Detección de phishing en URLs mediante Machine Learning (HistGradientBoosting)
+            </p>
+        </div>
+
+        <div class="card bg-black border-secondary shadow">
+            <div class="card-body p-4">
+                <h6 class="text-secondary mb-3 text-uppercase letter-spacing">
+                    <i class="fa fa-link me-2"></i>Introduce una URL para analizar
+                </h6>
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                <form asp-controller="Home" asp-action="Analyze" method="post">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-dark border-secondary text-secondary">
+                            <i class="fa fa-globe"></i>
+                        </span>
+                        <input asp-for="Url"
+                               class="form-control bg-dark border-secondary text-light"
+                               placeholder="https://example.com/path"
+                               autocomplete="off" />
+                        <button class="btn btn-danger px-4" type="submit">
+                            <i class="fa fa-magnifying-glass me-2"></i>Analizar
+                        </button>
+                    </div>
+                    <div class="form-text text-secondary mt-2">
+                        Introduce cualquier URL (con http:// o https://). El análisis se basa solo en el texto de la URL:
+                        no se visita el sitio.
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-4 text-center">
+            <div class="col-md-4">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <i class="fa fa-brain fa-2x text-info mb-2"></i>
+                    <h6 class="mb-1">HistGradientBoosting</h6>
+                    <p class="text-secondary small mb-0">
+                        Entrenado con ~34 mil URLs reales de phishing y sitios legítimos
+                        (F1 de 0.90 con URLs de phishing nuevas)
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <i class="fa fa-list-check fa-2x text-warning mb-2"></i>
+                    <h6 class="mb-1">15 características</h6>
+                    <p class="text-secondary small mb-0">
+                        Longitud, HTTPS, subdominios, IP en el dominio, palabras sospechosas y más
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <i class="fa fa-database fa-2x text-success mb-2"></i>
+                    <h6 class="mb-1">Historial</h6>
+                    <p class="text-secondary small mb-0">
+                        Cada análisis se guarda y se resume en el
+                        <a asp-controller="Dashboard" asp-action="Index" class="text-info text-decoration-none">Dashboard</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

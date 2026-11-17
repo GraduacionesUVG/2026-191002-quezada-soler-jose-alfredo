@@ -1,0 +1,44 @@
+{
+  "random_forest": {
+    "umbral_optimo": 0.4,
+    "f1_umbral_optimo": 0.9365,
+    "f1_umbral_0.5": 0.9321,
+    "n_train": 28879,
+    "n_val": 5127
+  },
+  "logistic_regression": {
+    "umbral_optimo": 0.38,
+    "f1_umbral_optimo": 0.9193,
+    "f1_umbral_0.5": 0.9161,
+    "n_train": 28879,
+    "n_val": 5127
+  },
+  "hist_gradient_boosting": {
+    "umbral_optimo": 0.31,
+    "f1_umbral_optimo": 0.9377,
+    "f1_umbral_0.5": 0.9372,
+    "n_train": 28879,
+    "n_val": 5127
+  },
+  "svm_rbf": {
+    "umbral_optimo": 0.29,
+    "f1_umbral_optimo": 0.9312,
+    "f1_umbral_0.5": 0.9301,
+    "n_train": 28879,
+    "n_val": 5127
+  },
+  "knn": {
+    "umbral_optimo": 0.41,
+    "f1_umbral_optimo": 0.8724,
+    "f1_umbral_0.5": 0.8714,
+    "n_train": 28879,
+    "n_val": 5127
+  },
+  "mlp": {
+    "umbral_optimo": 0.46,
+    "f1_umbral_optimo": 0.9362,
+    "f1_umbral_0.5": 0.9356,
+    "n_train": 28879,
+    "n_val": 5127
+  }
+}

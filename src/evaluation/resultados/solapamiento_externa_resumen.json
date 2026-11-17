@@ -1,0 +1,9 @@
+{
+  "n_externa": 562,
+  "url_identica_en_entrenamiento": 0,
+  "phishing_total": 281,
+  "phishing_hostname_compartido": 2,
+  "legitimo_total": 281,
+  "legitimo_hostname_compartido": 259,
+  "hostnames_legitimos_distintos": 96
+}

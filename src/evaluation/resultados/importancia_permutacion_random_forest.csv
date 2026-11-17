@@ -1,0 +1,16 @@
+feature,caida_f1_media,caida_f1_std
+has_https,0.1959,0.0038
+length_domain,0.1467,0.004
+count_digits_url,0.0485,0.0027
+count_slashes,0.0267,0.0017
+length_url,0.0158,0.0008
+count_hyphens,0.0064,0.001
+count_subdomains,0.0061,0.0006
+count_dots,0.0032,0.0005
+has_at_symbol,0.0022,0.0001
+count_question_marks,0.0016,0.0002
+count_equal_signs,0.0009,0.0002
+suspicious_words_count,0.0008,0.0004
+count_percent,0.0003,0.0002
+count_underscores,0.0002,0.0002
+has_ip_address,-0.0002,0.0004

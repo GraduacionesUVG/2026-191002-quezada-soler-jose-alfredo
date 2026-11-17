@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — PhishingShield</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg ps-navbar">
+    <div class="container">
+        <a class="navbar-brand ps-brand" asp-controller="Home" asp-action="Index">
+            <span class="ps-brand-icon"><i class="fa-solid fa-shield-halved"></i></span>
+            <span>PhishingShield</span>
+        </a>
+        <button class="navbar-toggler border-0 text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+            <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav ms-auto gap-1 align-items-lg-center">
+                <li class="nav-item">
+                    <a class="ps-nav-link" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-magnifying-glass me-2"></i>Analizar URL
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="ps-nav-link" asp-controller="Dashboard" asp-action="Index">
+                        <i class="fa fa-chart-column me-2"></i>Dashboard
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-5">
+    @RenderBody()
+</main>
+
+<footer class="ps-footer">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="ps-footer-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                <span class="ps-footer-brand">PhishingShield</span>
+            </div>
+            <p class="text-secondary small mb-0">&copy; @DateTime.Now.Year — Todos los derechos reservados</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

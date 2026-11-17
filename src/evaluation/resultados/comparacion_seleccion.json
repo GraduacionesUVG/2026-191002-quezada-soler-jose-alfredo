@@ -1,0 +1,96 @@
+{
+  "criterio": {
+    "fijado_el": "2026-10-22",
+    "nota": "Criterio fijado ANTES de correr comparar_modelos.py y seleccionar_modelo.py. No se modifica despues de ver resultados.",
+    "candidatos": [
+      "random_forest",
+      "logistic_regression",
+      "hist_gradient_boosting",
+      "svm_rbf",
+      "knn",
+      "mlp"
+    ],
+    "restriccion": {
+      "metrica": "p95 de latencia HTTP de POST /analyze (100 solicitudes, misma metodologia que prueba_latencia.py)",
+      "maximo_ms": 200
+    },
+    "criterio_principal": {
+      "metrica": "F1 en validacion externa (evaluation/validacion_externa_v2.csv, 562 URLs) al umbral de decision propio de cada modelo",
+      "umbral": "elegido por modelo maximizando F1 en un split 85/15 agrupado por hostname del dataset de entrenamiento (igual que elegir_umbral_v2.py); la validacion externa nunca se usa para elegir umbral",
+      "objetivo": "maximizar"
+    },
+    "desempate": {
+      "margen_f1": 0.01,
+      "regla": "Si varios modelos elegibles quedan a 0.01 o menos del mejor F1 externo, gana el de mayor F1 medio en validacion cruzada agrupada por hostname (StratifiedGroupKFold 5). Si persiste el empate (diferencia <= 0.001), gana el de menor p95 de latencia."
+    }
+  },
+  "candidatos": [
+    {
+      "clave": "random_forest",
+      "umbral": 0.4,
+      "f1_externa": 0.8733,
+      "f1_agrupado": 0.9349,
+      "p95_ms": 60.58,
+      "fallidas": 0
+    },
+    {
+      "clave": "logistic_regression",
+      "umbral": 0.38,
+      "f1_externa": 0.8447,
+      "f1_agrupado": 0.9115,
+      "p95_ms": 4.81,
+      "fallidas": 0
+    },
+    {
+      "clave": "hist_gradient_boosting",
+      "umbral": 0.31,
+      "f1_externa": 0.8972,
+      "f1_agrupado": 0.9347,
+      "p95_ms": 9.19,
+      "fallidas": 0
+    },
+    {
+      "clave": "svm_rbf",
+      "umbral": 0.29,
+      "f1_externa": 0.8801,
+      "f1_agrupado": 0.9235,
+      "p95_ms": 7.23,
+      "fallidas": 0
+    },
+    {
+      "clave": "knn",
+      "umbral": 0.41,
+      "f1_externa": 0.7949,
+      "f1_agrupado": 0.8683,
+      "p95_ms": 6.87,
+      "fallidas": 0
+    },
+    {
+      "clave": "mlp",
+      "umbral": 0.46,
+      "f1_externa": 0.8323,
+      "f1_agrupado": 0.9327,
+      "p95_ms": 4.87,
+      "fallidas": 0
+    }
+  ],
+  "decision": {
+    "ganador": "hist_gradient_boosting",
+    "motivo": "mayor F1 en validacion externa entre los elegibles",
+    "elegibles": [
+      "random_forest",
+      "logistic_regression",
+      "hist_gradient_boosting",
+      "svm_rbf",
+      "knn",
+      "mlp"
+    ],
+    "empatados_en_margen": [
+      "hist_gradient_boosting"
+    ]
+  },
+  "configuracion_produccion": {
+    "MODEL_PATH": "modelos_comparacion/hist_gradient_boosting.pkl",
+    "DECISION_THRESHOLD": 0.31
+  }
+}

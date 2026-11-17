@@ -1,0 +1,25 @@
+{
+  "fijado_el": "2026-10-22",
+  "nota": "Criterio fijado ANTES de correr comparar_modelos.py y seleccionar_modelo.py. No se modifica despues de ver resultados.",
+  "candidatos": [
+    "random_forest",
+    "logistic_regression",
+    "hist_gradient_boosting",
+    "svm_rbf",
+    "knn",
+    "mlp"
+  ],
+  "restriccion": {
+    "metrica": "p95 de latencia HTTP de POST /analyze (100 solicitudes, misma metodologia que prueba_latencia.py)",
+    "maximo_ms": 200
+  },
+  "criterio_principal": {
+    "metrica": "F1 en validacion externa (evaluation/validacion_externa_v2.csv, 562 URLs) al umbral de decision propio de cada modelo",
+    "umbral": "elegido por modelo maximizando F1 en un split 85/15 agrupado por hostname del dataset de entrenamiento (igual que elegir_umbral_v2.py); la validacion externa nunca se usa para elegir umbral",
+    "objetivo": "maximizar"
+  },
+  "desempate": {
+    "margen_f1": 0.01,
+    "regla": "Si varios modelos elegibles quedan a 0.01 o menos del mejor F1 externo, gana el de mayor F1 medio en validacion cruzada agrupada por hostname (StratifiedGroupKFold 5). Si persiste el empate (diferencia <= 0.001), gana el de menor p95 de latencia."
+  }
+}

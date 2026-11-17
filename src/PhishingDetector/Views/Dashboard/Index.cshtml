@@ -1,0 +1,562 @@
+@model PhishingDetector.Models.DashboardMetrics
+@using System.Text.Json
+@using System.Globalization
+@{
+    ViewData["Title"] = "Dashboard";
+    var hasData = Model.TotalAnalyses > 0;
+    var pct = hasData
+        ? (double)Model.PhishingDetected / Model.TotalAnalyses * 100
+        : 0;
+
+    var opts = new JsonSerializerOptions();
+    var datesJson      = JsonSerializer.Serialize(Model.DailyCounts.Select(d => d.Date).ToList(), opts);
+    var totalsJson     = JsonSerializer.Serialize(Model.DailyCounts.Select(d => d.Total).ToList(), opts);
+    var phishDailyJson = JsonSerializer.Serialize(Model.DailyCounts.Select(d => d.Phishing).ToList(), opts);
+}
+
+<!-- Header -->
+<div class="d-flex align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="mb-0 fw-bold">
+            <i class="fa fa-shield-halved text-danger me-2"></i>Centro de Análisis
+        </h1>
+        <p class="text-secondary mb-0 mt-1">Historial de URLs analizadas con el modelo HistGradientBoosting</p>
+    </div>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-danger ms-auto px-4">
+        <i class="fa fa-plus me-2"></i>Nuevo análisis
+    </a>
+</div>
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card kpi-card bg-black border-info h-100">
+            <div class="card-body text-center py-4">
+                <i class="fa fa-database fa-xl text-info mb-3 d-block"></i>
+                <div class="kpi-num text-info" data-val="@Model.TotalAnalyses">0</div>
+                <div class="kpi-lbl">Total analizados</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card kpi-card bg-black border-danger h-100 @(Model.PhishingDetected > 0 ? "has-danger" : "")">
+            <div class="card-body text-center py-4">
+                <i class="fa fa-skull-crossbones fa-xl text-danger mb-3 d-block"></i>
+                <div class="kpi-num text-danger" data-val="@Model.PhishingDetected">0</div>
+                <div class="kpi-lbl">Phishing detectado</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card kpi-card bg-black border-success h-100">
+            <div class="card-body text-center py-4">
+                <i class="fa fa-circle-check fa-xl text-success mb-3 d-block"></i>
+                <div class="kpi-num text-success" data-val="@Model.LegitimateDetected">0</div>
+                <div class="kpi-lbl">URLs legítimas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card kpi-card bg-black border-warning h-100">
+            <div class="card-body text-center py-4">
+                <i class="fa fa-chart-line fa-xl text-warning mb-3 d-block"></i>
+                <div class="kpi-num text-warning">@((Model.AverageProbability * 100).ToString("F1", CultureInfo.InvariantCulture))%</div>
+                <div class="kpi-lbl">Prob. media de phishing</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts row 1 -->
+<div class="row g-3 mb-4">
+
+    <!-- Doughnut -->
+    <div class="col-lg-4">
+        <div class="card bg-black border-secondary h-100">
+            <div class="card-header border-secondary">
+                <i class="fa fa-chart-pie text-info me-2"></i>Distribución de resultados
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
+                @if (hasData)
+                {
+                    <div style="position:relative; width:220px; height:220px;">
+                        <canvas id="doughnutChart" role="img" aria-label="Distribución entre URLs de phishing y legítimas"></canvas>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+                            <div class="fw-bold text-danger" style="font-size:2rem;">@pct.ToString("F0", CultureInfo.InvariantCulture)%</div>
+                            <div class="text-secondary" style="font-size:.8rem;">phishing</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-4 mt-3">
+                        <span class="d-flex align-items-center gap-2 small">
+                            <span class="legend-dot" style="background:#ff4757;"></span>
+                            Phishing (@Model.PhishingDetected)
+                        </span>
+                        <span class="d-flex align-items-center gap-2 small">
+                            <span class="legend-dot" style="background:#2ed573;"></span>
+                            Legítima (@Model.LegitimateDetected)
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="chart-empty"><i class="fa fa-chart-pie"></i>Aún no hay análisis</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk bar -->
+    <div class="col-lg-8">
+        <div class="card bg-black border-secondary h-100">
+            <div class="card-header border-secondary d-flex flex-wrap align-items-center gap-2">
+                <span><i class="fa fa-triangle-exclamation text-warning me-2"></i>Distribución por nivel de riesgo</span>
+                <span class="ms-auto text-secondary text-lowercase fw-normal" style="letter-spacing:0;">
+                    alto ≥ 70% · medio 31–70% · bajo &lt; 31%
+                </span>
+            </div>
+            <div class="card-body d-flex align-items-center">
+                @if (hasData)
+                {
+                    <canvas id="riskChart" role="img" aria-label="Cantidad de URLs por nivel de riesgo" style="width:100%;max-height:210px;"></canvas>
+                }
+                else
+                {
+                    <div class="chart-empty w-100"><i class="fa fa-triangle-exclamation"></i>Aún no hay análisis</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Line chart -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card bg-black border-secondary">
+            <div class="card-header border-secondary d-flex align-items-center">
+                <i class="fa fa-chart-line text-success me-2"></i>
+                <span>Actividad diaria — últimos 7 días con análisis</span>
+            </div>
+            <div class="card-body">
+                @if (hasData)
+                {
+                    <canvas id="lineChart" role="img" aria-label="Análisis totales y de phishing por día" style="max-height:220px;"></canvas>
+                }
+                else
+                {
+                    <div class="chart-empty"><i class="fa fa-chart-line"></i>Aún no hay análisis</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent table -->
+<div class="card bg-black border-secondary shadow">
+    <div class="card-header border-secondary d-flex align-items-center">
+        <i class="fa fa-clock-rotate-left text-secondary me-2"></i>
+        <span class="fw-semibold">Análisis recientes</span>
+        <span class="badge bg-secondary ms-2" id="countBadge">últimos @Model.RecentAnalyses.Count</span>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.RecentAnalyses.Any())
+        {
+            <div class="text-center text-secondary py-5">
+                <i class="fa fa-inbox fa-3x mb-3 d-block opacity-25"></i>
+                Sin análisis todavía.
+                <br />
+                <a asp-controller="Home" asp-action="Index" class="btn btn-sm btn-outline-danger mt-3">
+                    Analizar una URL
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- Toolbar: búsqueda, filtro, exportar -->
+            <div class="table-toolbar d-flex flex-wrap align-items-center gap-2 p-3 border-bottom border-secondary">
+                <div class="input-group input-group-sm" style="max-width:280px;">
+                    <span class="input-group-text"><i class="fa fa-magnifying-glass"></i></span>
+                    <input type="search" id="tableSearch" class="form-control" placeholder="Buscar URL…" autocomplete="off" aria-label="Buscar URL" />
+                </div>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Filtrar por resultado" id="resultFilter">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter="ALL">Todas</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="PHISHING">Phishing</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="LEGITIMATE">Legítimas</button>
+                </div>
+                <span class="text-secondary small ms-lg-2" id="tableCounter"></span>
+                <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" id="exportCsv">
+                    <i class="fa fa-download me-2"></i>Exportar CSV
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="text-secondary border-secondary">
+                            <th class="ps-3">#</th>
+                            <th>URL</th>
+                            <th>Resultado</th>
+                            <th>Prob. de phishing</th>
+                            <th>Riesgo</th>
+                            <th>Fecha (UTC)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysesBody">
+                        @foreach (var a in Model.RecentAnalyses)
+                        {
+                            var rc = a.RiskLevel == "HIGH" ? "danger" : a.RiskLevel == "MEDIUM" ? "warning" : "success";
+                            <tr data-id="@a.Id" data-url="@a.Url" data-result="@a.Result" data-risk="@a.RiskLevel"
+                                data-prob="@a.Probability.ToString("R", CultureInfo.InvariantCulture)"
+                                data-date="@a.CreatedAt.ToString("yyyy-MM-dd HH:mm")">
+                                <td class="ps-3 text-secondary small">@a.Id</td>
+                                <td style="max-width:340px;" class="text-truncate" title="@a.Url">
+                                    <i class="fa fa-link text-secondary me-1 small"></i>
+                                    <small>@a.Url</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(a.Result == "PHISHING" ? "danger" : "success") px-2">
+                                        @(a.Result == "PHISHING" ? "⚠ PHISHING" : "✓ LEGÍTIMA")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:5px;max-width:80px;">
+                                            <div class="progress-bar bg-@rc"
+                                                 style="width:@((a.Probability * 100).ToString("F0", CultureInfo.InvariantCulture))%">
+                                            </div>
+                                        </div>
+                                        <small>@((a.Probability * 100).ToString("F1", CultureInfo.InvariantCulture))%</small>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-@rc">@(a.RiskLevel == "HIGH" ? "ALTO" : a.RiskLevel == "MEDIUM" ? "MEDIO" : "BAJO")</span></td>
+                                <td class="text-secondary"><small>@a.CreatedAt.ToString("dd/MM/yy HH:mm")</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="noMatches" class="d-none text-center text-secondary py-4 small">
+                <i class="fa fa-filter-circle-xmark me-2"></i>Ningún análisis coincide con el filtro.
+            </div>
+
+            @if (Model.RecentAnalyses.Count >= 10)
+            {
+                <div class="text-center p-3 border-top border-secondary" id="loadMoreWrap">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="loadMore">
+                        <i class="fa fa-angles-down me-2"></i>Cargar más (hasta 50)
+                    </button>
+                    <div class="text-danger small mt-2 d-none" id="loadMoreError">No se pudo cargar el historial.</div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+<script>
+// Global Chart.js dark theme
+Chart.defaults.color = '#9aa5b4';
+Chart.defaults.borderColor = '#1e2530';
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+Chart.defaults.font.size = 13;
+
+const C = {
+    red:    '#ff4757',
+    green:  '#2ed573',
+    blue:   '#1e90ff',
+    yellow: '#ffa502',
+    bg:     '#080b10',
+    track:  '#1a1f2b',
+};
+
+// Data from server
+const hasData     = @(hasData ? "true" : "false");
+const phishCount  = @Model.PhishingDetected;
+const legitCount  = @Model.LegitimateDetected;
+const highRisk    = @Model.HighRisk;
+const medRisk     = @Model.MediumRisk;
+const lowRisk     = @Model.LowRisk;
+const dates       = @Html.Raw(datesJson);
+const totals      = @Html.Raw(totalsJson);
+const phishDaily  = @Html.Raw(phishDailyJson);
+
+if (hasData) {
+    const totalCount = phishCount + legitCount;
+    const pctOf = n => totalCount > 0 ? ((n / totalCount) * 100).toFixed(1) : '0.0';
+
+    // DOUGHNUT
+    new Chart(document.getElementById('doughnutChart'), {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [phishCount, legitCount],
+                backgroundColor: [C.red, C.green],
+                borderColor: C.bg,
+                borderWidth: 4,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            cutout: '72%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.raw} URLs (${pctOf(ctx.raw)}%)`
+                    }
+                }
+            },
+            animation: { duration: 1400, easing: 'easeInOutQuart' }
+        }
+    });
+
+    // RISK BAR (horizontal)
+    new Chart(document.getElementById('riskChart'), {
+        type: 'bar',
+        data: {
+            labels: ['ALTO', 'MEDIO', 'BAJO'],
+            datasets: [{
+                label: 'Cantidad de URLs',
+                data: [highRisk, medRisk, lowRisk],
+                backgroundColor: [
+                    'rgba(255,71,87,0.8)',
+                    'rgba(255,165,2,0.8)',
+                    'rgba(46,213,115,0.8)',
+                ],
+                borderColor: [C.red, C.yellow, C.green],
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.raw} URLs (${pctOf(ctx.raw)}%)` } }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#1e2530' },
+                    ticks: { precision: 0 },
+                },
+                y: { grid: { display: false } }
+            },
+            animation: { duration: 1000, easing: 'easeOutCubic' }
+        }
+    });
+
+    // LINE CHART (daily activity)
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+    const gradBlue = lineCtx.createLinearGradient(0, 0, 0, 220);
+    gradBlue.addColorStop(0, 'rgba(30,144,255,0.35)');
+    gradBlue.addColorStop(1, 'rgba(30,144,255,0)');
+    const gradRed = lineCtx.createLinearGradient(0, 0, 0, 220);
+    gradRed.addColorStop(0, 'rgba(255,71,87,0.35)');
+    gradRed.addColorStop(1, 'rgba(255,71,87,0)');
+
+    new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Total análisis',
+                    data: totals,
+                    borderColor: C.blue,
+                    backgroundColor: gradBlue,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: C.blue,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                },
+                {
+                    label: 'Phishing',
+                    data: phishDaily,
+                    borderColor: C.red,
+                    backgroundColor: gradRed,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: C.red,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: { boxWidth: 12, usePointStyle: true }
+                }
+            },
+            scales: {
+                x: { grid: { color: '#1e2530' } },
+                y: { grid: { color: '#1e2530' }, ticks: { precision: 0 }, beginAtZero: true }
+            },
+            animation: { duration: 1600, easing: 'easeInOutCubic' }
+        }
+    });
+}
+
+// COUNTER ANIMATION
+document.querySelectorAll('.kpi-num[data-val]').forEach(el => {
+    const target = parseInt(el.dataset.val) || 0;
+    if (target === 0) { el.textContent = '0'; return; }
+    let current = 0;
+    const step  = Math.max(1, Math.ceil(target / 50));
+    const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = current;
+        if (current >= target) clearInterval(timer);
+    }, 25);
+});
+
+// TABLE: filtro, búsqueda, carga extra y exportación
+const tbody = document.getElementById('analysesBody');
+if (tbody) {
+    const searchEl   = document.getElementById('tableSearch');
+    const counterEl  = document.getElementById('tableCounter');
+    const noMatchEl  = document.getElementById('noMatches');
+    const badgeEl    = document.getElementById('countBadge');
+    const filterBtns = document.querySelectorAll('#resultFilter [data-filter]');
+    let resultFilter = 'ALL';
+
+    const rows = () => Array.from(tbody.querySelectorAll('tr'));
+
+    function applyFilters() {
+        const q = searchEl.value.trim().toLowerCase();
+        let shown = 0;
+        const all = rows();
+        all.forEach(tr => {
+            const ok = (resultFilter === 'ALL' || tr.dataset.result === resultFilter)
+                    && (!q || tr.dataset.url.toLowerCase().includes(q));
+            tr.classList.toggle('d-none', !ok);
+            if (ok) shown++;
+        });
+        counterEl.textContent = `Mostrando ${shown} de ${all.length}`;
+        noMatchEl.classList.toggle('d-none', shown !== 0);
+        badgeEl.textContent = `últimos ${all.length}`;
+    }
+
+    searchEl.addEventListener('input', applyFilters);
+    filterBtns.forEach(btn => btn.addEventListener('click', () => {
+        resultFilter = btn.dataset.filter;
+        filterBtns.forEach(b => b.classList.toggle('active', b === btn));
+        applyFilters();
+    }));
+
+    // Construye una fila con nodos DOM (textContent) para que una URL nunca se interprete como HTML.
+    function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+    }
+
+    function buildRow(a) {
+        const rc  = a.riskLevel === 'HIGH' ? 'danger' : a.riskLevel === 'MEDIUM' ? 'warning' : 'success';
+        const riskEs = a.riskLevel === 'HIGH' ? 'ALTO' : a.riskLevel === 'MEDIUM' ? 'MEDIO' : 'BAJO';
+        const isPhish = a.result === 'PHISHING';
+        const iso = String(a.createdAt);                       // yyyy-MM-ddTHH:mm:ss… (UTC, sin convertir zona)
+        const date = iso.slice(0, 10);                         // yyyy-MM-dd
+        const time = iso.slice(11, 16);                        // HH:mm
+
+        const tr = el('tr');
+        tr.dataset.id = a.id;
+        tr.dataset.url = a.url;
+        tr.dataset.result = a.result;
+        tr.dataset.risk = a.riskLevel;
+        tr.dataset.prob = a.probability;
+        tr.dataset.date = `${date} ${time}`;
+
+        tr.appendChild(el('td', 'ps-3 text-secondary small', a.id));
+
+        const urlTd = el('td', 'text-truncate');
+        urlTd.style.maxWidth = '340px';
+        urlTd.title = a.url;
+        urlTd.appendChild(el('i', 'fa fa-link text-secondary me-1 small'));
+        urlTd.appendChild(el('small', '', a.url));
+        tr.appendChild(urlTd);
+
+        const resTd = el('td');
+        resTd.appendChild(el('span', `badge bg-${isPhish ? 'danger' : 'success'} px-2`,
+                             isPhish ? '⚠ PHISHING' : '✓ LEGÍTIMA'));
+        tr.appendChild(resTd);
+
+        const probTd = el('td');
+        const probWrap = el('div', 'd-flex align-items-center gap-2');
+        const prog = el('div', 'progress flex-grow-1');
+        prog.style.height = '5px';
+        prog.style.maxWidth = '80px';
+        const bar = el('div', `progress-bar bg-${rc}`);
+        bar.style.width = `${(a.probability * 100).toFixed(0)}%`;
+        prog.appendChild(bar);
+        probWrap.appendChild(prog);
+        probWrap.appendChild(el('small', '', `${(a.probability * 100).toFixed(1)}%`));
+        probTd.appendChild(probWrap);
+        tr.appendChild(probTd);
+
+        const riskTd = el('td');
+        riskTd.appendChild(el('span', `badge bg-${rc}`, riskEs));
+        tr.appendChild(riskTd);
+
+        const dateTd = el('td', 'text-secondary');
+        dateTd.appendChild(el('small', '',
+            `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(2, 4)} ${time}`));
+        tr.appendChild(dateTd);
+
+        return tr;
+    }
+
+    // Cargar más (reusa el endpoint existente /api/phishing/history)
+    const loadMoreBtn = document.getElementById('loadMore');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', async () => {
+            const errEl = document.getElementById('loadMoreError');
+            errEl.classList.add('d-none');
+            loadMoreBtn.disabled = true;
+            try {
+                const res = await fetch('@Url.Content("~/api/phishing/history?limit=50")');
+                if (!res.ok) throw new Error(res.status);
+                const history = await res.json();
+                const known = new Set(rows().map(tr => tr.dataset.id));
+                history.filter(a => !known.has(String(a.id)))
+                       .forEach(a => tbody.appendChild(buildRow(a)));
+                document.getElementById('loadMoreWrap').remove();
+                applyFilters();
+            } catch {
+                errEl.classList.remove('d-none');
+                loadMoreBtn.disabled = false;
+            }
+        });
+    }
+
+    // Exportar a CSV lo que se ve en la tabla (respeta filtro y búsqueda)
+    function csvCell(value) {
+        let s = String(value ?? '');
+        if (['=', '+', '-', '@@', '\t', '\r'].includes(s[0])) s = "'" + s;   // evita inyección de fórmulas en Excel
+        return `"${s.replace(/"/g, '""')}"`;
+    }
+
+    document.getElementById('exportCsv').addEventListener('click', () => {
+        const lines = [['id', 'url', 'resultado', 'probabilidad', 'riesgo', 'fecha_utc'].join(',')];
+        rows().filter(tr => !tr.classList.contains('d-none')).forEach(tr => {
+            const d = tr.dataset;
+            lines.push([d.id, d.url, d.result, d.prob, d.risk, d.date].map(csvCell).join(','));
+        });
+        const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `analisis-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
+
+    applyFilters();
+}
+</script>
+}

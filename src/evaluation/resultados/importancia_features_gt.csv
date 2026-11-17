@@ -1,0 +1,16 @@
+feature,importancia
+length_domain,0.3566
+length_url,0.3446
+count_hyphens,0.0778
+count_dots,0.0743
+has_https,0.0584
+count_digits_url,0.044
+count_subdomains,0.0201
+suspicious_words_count,0.0121
+count_slashes,0.0065
+count_underscores,0.0056
+has_at_symbol,0.0
+has_ip_address,0.0
+count_question_marks,0.0
+count_equal_signs,0.0
+count_percent,0.0
